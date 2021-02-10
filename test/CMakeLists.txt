@@ -1,0 +1,1 @@
+add_executable(rosetta_test rosetta_test.cpp)

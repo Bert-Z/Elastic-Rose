@@ -1,4 +1,4 @@
-#include "rosetta.hpp"
+#include "../include/rosetta.hpp"
 
 using namespace elastic_rose;
 
@@ -16,6 +16,11 @@ int main(int argc, char **argv)
     std::vector<uint64_t> keys = {2, 3, 13, 19, 23, 29, 31, 37, 123, 202};
     // u64 keys[] = {123};
     Rosetta rose = Rosetta(keys, keys.size());
+
+    printf("%d %s\n", 2, rose.lookupKey(2) ? "exist" : "not exist");
+    printf("%d %s\n", 13, rose.lookupKey(13) ? "exist" : "not exist");
+    printf("%d %s\n", 202, rose.lookupKey(202) ? "exist" : "not exist");
+    printf("%d %s\n", 203, rose.lookupKey(203) ? "exist" : "not exist");
 
     printf("\n");
     // close range query
