@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     test_rose(rose, 210, 220);
 
     std::vector<string> strkeys = {"a", "cat", "dog", "egg", "mark"};
-    Rosetta rose2 = Rosetta(strkeys, strkeys.size());
+    Rosetta rose2 = Rosetta(strkeys, strkeys.size(), 128);
     printf("%s %s\n", "a", rose2.lookupKey("a") ? "exist" : "not exist");
     printf("%s %s\n", "aa", rose2.lookupKey("aa") ? "exist" : "not exist");
     printf("%s %s\n", "cat", rose2.lookupKey("cat") ? "exist" : "not exist");
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     // std::vector<uint64_t> keys = {6989586621679009792, 7017452644373364736, 7061644215716937728};
     // Rosetta rose = Rosetta(keys, keys.size());
     // test_rose(rose, 6989586621679009792, 7061644215716937728);
-    
+
     // std::vector<string> strkeys = {
     //     "a", "ac", "b"};
     // Rosetta rose2 = Rosetta(strkeys, strkeys.size());

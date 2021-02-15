@@ -1,6 +1,5 @@
 #pragma once
 
-#include "lib.hpp"
 #include <string>
 #include <vector>
 
@@ -13,11 +12,11 @@ namespace elastic_rose
     {
     public:
         Rosetta(){};
-        Rosetta(std::vector<u64> keys, u32 num) : levels(64)
+        Rosetta(std::vector<u64> keys, u32 num) : levels_(64)
         {
-            bfs = std::vector<struct bf *>(levels);
+            bfs = std::vector<struct bf *>(levels_);
             // malloc
-            for (u32 i = 0; i < levels; ++i)
+            for (u32 i = 0; i < levels_; ++i)
             {
                 struct bf *bf = bf_create(10, num);
                 assert(bf);
@@ -29,13 +28,12 @@ namespace elastic_rose
                 insertKey(key);
         }
 
-        Rosetta(std::vector<std::string> keys, u32 num)
+        Rosetta(std::vector<std::string> keys, u32 num, u32 levels)
         {
-            // FIXME: solid make levels as 63 for u64 now
-            levels = 64;
-            bfs = std::vector<struct bf *>(levels);
+            levels_ = levels;
+            bfs = std::vector<struct bf *>(levels_);
             // malloc
-            for (u32 i = 0; i < levels; ++i)
+            for (u32 i = 0; i < levels_; ++i)
             {
                 struct bf *bf = bf_create(10, num);
                 assert(bf);
@@ -55,37 +53,37 @@ namespace elastic_rose
 
         void insertKey(u64 key)
         {
-            for (u32 i = 0; i < levels; ++i)
+            for (u32 i = 0; i < levels_; ++i)
             {
-                u64 mask = ~((1ul << (levels - i - 1)) - 1);
+                u64 mask = ~((1ul << (levels_ - i - 1)) - 1);
                 u64 ik = key & mask;
-                bf_add(bfs[i], hash(ik));
+                bf_add(bfs[i], u64hash(ik));
             }
         }
         void insertKey(std::string key)
         {
             key = str2BitArray(key);
-            for (u32 i = 0; i < levels; ++i)
+            for (u32 i = 0; i < levels_; ++i)
                 bf_add(bfs[i], BloomHash(key.substr(0, i + 1)));
         }
 
         bool lookupKey(u64 key)
         {
-            return bf_test(bfs[levels - 1], hash(key));
+            return bf_test(bfs[levels_ - 1], u64hash(key));
         }
 
         bool lookupKey(std::string key)
         {
             // std::cout << str2BitArray(key) << std::endl;
             key = str2BitArray(key);
-            return bf_test(bfs[levels - 1], BloomHash(key));
+            return bf_test(bfs[levels_ - 1], BloomHash(key));
         }
 
         bool range_query(u64 low, u64 high, u64 p = 0, u64 l = 1)
         {
             // std::cout << p << ' ' << l << std::endl;
-            const u64 pow_1 = (l == 1) ? UINT64_MAX : ((1lu << (levels - l + 1)) - 1);
-            const u64 pow_r_1 = 1lu << (levels - l);
+            const u64 pow_1 = (l == 1) ? UINT64_MAX : ((1lu << (levels_ - l + 1)) - 1);
+            const u64 pow_r_1 = 1lu << (levels_ - l);
 
             if ((p > high) || ((p + pow_1) < low))
             {
@@ -109,7 +107,7 @@ namespace elastic_rose
 
         bool range_query(std::string low, std::string high)
         {
-            std::string p(64, '0');
+            std::string p(levels_, '0');
             return range_query(str2BitArray(low), str2BitArray(high), p, 1);
         }
 
@@ -117,10 +115,10 @@ namespace elastic_rose
         {
             // std::cout << p << ' ' << l << std::endl;
             std::string pow_1;
-            for (u32 i = 0; i < levels - l + 1; ++i)
+            for (u32 i = 0; i < levels_ - l + 1; ++i)
                 pow_1 += '1';
 
-            std::string upper_bound = p.substr(0, levels - pow_1.size()) + pow_1;
+            std::string upper_bound = p.substr(0, levels_ - pow_1.size()) + pow_1;
 
             if ((p > high) || (low > upper_bound))
             {
@@ -143,27 +141,21 @@ namespace elastic_rose
 
     private:
         std::vector<struct bf *> bfs;
-        u32 levels;
-
-        u64 hash(u64 key)
-        {
-            u32 lo = crc32c_u64(0xDEADBEEF, key);
-            return (u64)lo << 32 | lo;
-        }
+        u32 levels_;
 
         bool doubt(u64 p, u64 l)
         {
             // std::cout << "doubt:" << p << ' ' << l << std::endl;
-            if (!bf_test(bfs[l - 2], hash(p)))
+            if (!bf_test(bfs[l - 2], u64hash(p)))
                 return false;
 
-            if (l > levels)
+            if (l > levels_)
                 return true;
 
             if (doubt(p, l + 1))
                 return true;
 
-            return doubt(p + (1 << (levels - l)), l + 1);
+            return doubt(p + (1 << (levels_ - l)), l + 1);
         }
 
         bool doubt(std::string p, u64 l)
@@ -174,7 +166,7 @@ namespace elastic_rose
                 return false;
             }
 
-            if (l > levels)
+            if (l > levels_)
             {
                 return true;
             }
@@ -196,7 +188,7 @@ namespace elastic_rose
                     ret += (((c >> i) & 1) ? '1' : '0');
 
             // format str size
-            while (ret.size() < levels)
+            while (ret.size() < levels_)
                 ret += '0';
 
             return ret;

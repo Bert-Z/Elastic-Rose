@@ -1,11 +1,8 @@
 #pragma once
 
-// #include <stddef.h>
-// #include <stdint.h>
-// #include <stdio.h>
-// #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include "lib.hpp"
 
 namespace elastic_rose
 {
@@ -105,6 +102,12 @@ namespace elastic_rose
             fprintf(stderr, "BloomHash id error\n");
             exit(1);
         }
+    }
+
+    inline u64 u64hash(u64 key)
+    {
+        u32 lo = crc32c_u64(0xDEADBEEF, key);
+        return (u64)lo << 32 | lo;
     }
 
 } // namespace elastic_rose
