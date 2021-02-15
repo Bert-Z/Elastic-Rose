@@ -145,6 +145,52 @@ namespace elastic_rose
     return bf;
   }
 
+  u64 bf_serialized_size(struct bf *const bf)
+  {
+    u64 size = sizeof(bf->nr_probe) + sizeof(bf->bitmap.bits) + sizeof(bf->bitmap.ones);
+    size += bits_round_up(bf->bitmap.bits, 6) >> 3;
+    sizeAlign(size);
+    return size;
+  }
+
+  void bf_serialize(struct bf *const bf, char *&dst)
+  {
+    memcpy(dst, &bf->nr_probe, sizeof(bf->nr_probe));
+    dst += sizeof(bf->nr_probe);
+    memcpy(dst, &bf->bitmap.bits, sizeof(bf->bitmap.bits));
+    dst += sizeof(bf->bitmap.bits);
+    memcpy(dst, &bf->bitmap.ones, sizeof(bf->bitmap.ones));
+    dst += sizeof(bf->bitmap.ones);
+
+    u64 bm_size = bits_round_up(bf->bitmap.bits, 6) >> 3;
+    memcpy(dst, bf->bitmap.bm, bm_size);
+    dst += bm_size;
+    align(dst);
+  }
+
+  struct bf *bf_deserialize(char *&src)
+  {
+    u64 nr_probe, nbits, ones;
+    memcpy(&nr_probe, src, sizeof(nr_probe));
+    src += sizeof(nr_probe);
+    memcpy(&nbits, src, sizeof(nbits));
+    src += sizeof(nbits);
+    memcpy(&ones, src, sizeof(ones));
+    src += sizeof(ones);
+    u64 bm_size = bits_round_up(nbits, 6) >> 3;
+    struct bf *const bf = (struct bf *const)malloc(sizeof(*bf) + bm_size);
+
+    bf->nr_probe = nr_probe;
+    bf->bitmap.bits = nbits;
+    bf->bitmap.ones = ones;
+
+    memcpy(&(bf->bitmap.bm), src, bm_size);
+    src += bm_size;
+    align(src);
+
+    return bf;
+  }
+
   static inline u64
   bf_inc(const u64 hash)
   {
