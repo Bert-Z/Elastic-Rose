@@ -1,7 +1,6 @@
 #pragma once
 
 #include "lib.hpp"
-#include "bitvec.hpp"
 #include <string>
 #include <vector>
 
@@ -45,7 +44,7 @@ namespace elastic_rose
 
             // insert keys
             for (auto key : keys)
-                insertKey(str2BitArray(key));
+                insertKey(key);
         }
 
         ~Rosetta()
@@ -63,13 +62,11 @@ namespace elastic_rose
                 bf_add(bfs[i], hash(ik));
             }
         }
-        void insertKey(Bitvec<64> key)
+        void insertKey(std::string key)
         {
+            key = str2BitArray(key);
             for (u32 i = 0; i < levels; ++i)
-            {
-
-                bf_add(bfs[i], BloomHash(key.to_string().substr(0, i + 2)));
-            }
+                bf_add(bfs[i], BloomHash(key.substr(0, i + 1)));
         }
 
         bool lookupKey(u64 key)
@@ -79,12 +76,14 @@ namespace elastic_rose
 
         bool lookupKey(std::string key)
         {
-            std::cout << str2BitArray(key) << std::endl;
-            return bf_test(bfs[levels - 1], BloomHash(Bitvec<64>(str2BitArray(key)).to_string()));
+            // std::cout << str2BitArray(key) << std::endl;
+            key = str2BitArray(key);
+            return bf_test(bfs[levels - 1], BloomHash(key));
         }
 
         bool range_query(u64 low, u64 high, u64 p = 0, u64 l = 1)
         {
+            // std::cout << p << ' ' << l << std::endl;
             const u64 pow_1 = (l == 1) ? UINT64_MAX : ((1lu << (levels - l + 1)) - 1);
             const u64 pow_r_1 = 1lu << (levels - l);
 
@@ -110,20 +109,19 @@ namespace elastic_rose
 
         bool range_query(std::string low, std::string high)
         {
-            return range_query(Bitvec<64>(str2BitArray(low)), Bitvec<64>(str2BitArray(high)), Bitvec<64>(), 1);
+            std::string p(64, '0');
+            return range_query(str2BitArray(low), str2BitArray(high), p, 1);
         }
 
-        bool range_query(Bitvec<64> low, Bitvec<64> high, Bitvec<64> p, u64 l)
+        bool range_query(std::string low, std::string high, std::string p, u64 l)
         {
-            std::string pow = "1";
-            for (u32 i = 0; i < levels - l + 1; ++i)
-                pow += '0';
-
+            // std::cout << p << ' ' << l << std::endl;
             std::string pow_1;
             for (u32 i = 0; i < levels - l + 1; ++i)
                 pow_1 += '1';
 
-            std::string upper_bound = p.to_string().substr(0, levels + 1 - pow_1.size()) + pow_1;
+            std::string upper_bound = p.substr(0, levels - pow_1.size()) + pow_1;
+
             if ((p > high) || (low > upper_bound))
             {
                 return false;
@@ -139,7 +137,7 @@ namespace elastic_rose
                 return true;
             }
 
-            p[levels - l] = 1;
+            p[l - 1] = '1';
             return range_query(low, high, p, l + 1);
         }
 
@@ -155,6 +153,7 @@ namespace elastic_rose
 
         bool doubt(u64 p, u64 l)
         {
+            // std::cout << "doubt:" << p << ' ' << l << std::endl;
             if (!bf_test(bfs[l - 2], hash(p)))
                 return false;
 
@@ -167,18 +166,10 @@ namespace elastic_rose
             return doubt(p + (1 << (levels - l)), l + 1);
         }
 
-        bool doubt(Bitvec<64> p, u64 l)
+        bool doubt(std::string p, u64 l)
         {
-            if (l == 1)
-            {
-                return true;
-            }
-            if (l > levels + 1)
-            {
-                return true;
-            }
-
-            if (!bf_test(bfs[l - 2], BloomHash(p.to_string())))
+            // std::cout << "doubt:" << p << ' ' << l << std::endl;
+            if (!bf_test(bfs[l - 2], BloomHash(p.substr(0, l - 1))))
             {
                 return false;
             }
@@ -192,7 +183,7 @@ namespace elastic_rose
             {
                 return true;
             }
-            p[levels - l + 1] = 1;
+            p[l - 1] = '1';
             return doubt(p, l + 1);
         }
 
@@ -200,8 +191,13 @@ namespace elastic_rose
         {
             std::string ret = "";
             for (auto c : str)
+
                 for (int i = 7; i >= 0; --i)
                     ret += (((c >> i) & 1) ? '1' : '0');
+
+            // format str size
+            while (ret.size() < levels)
+                ret += '0';
 
             return ret;
         }
