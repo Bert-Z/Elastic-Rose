@@ -14,10 +14,8 @@ namespace elastic_rose
     {
     public:
         Rosetta(){};
-        Rosetta(std::vector<u64> keys, u32 num)
+        Rosetta(std::vector<u64> keys, u32 num) : levels(64)
         {
-            // FIXME: solid make levels as 63 for u64 now
-            levels = 63;
             bfs = std::vector<struct bf *>(levels);
             // malloc
             for (u32 i = 0; i < levels; ++i)
@@ -35,7 +33,7 @@ namespace elastic_rose
         Rosetta(std::vector<std::string> keys, u32 num)
         {
             // FIXME: solid make levels as 63 for u64 now
-            levels = 63;
+            levels = 64;
             bfs = std::vector<struct bf *>(levels);
             // malloc
             for (u32 i = 0; i < levels; ++i)
@@ -81,31 +79,22 @@ namespace elastic_rose
 
         bool lookupKey(std::string key)
         {
-
+            std::cout << str2BitArray(key) << std::endl;
             return bf_test(bfs[levels - 1], BloomHash(Bitvec<64>(str2BitArray(key)).to_string()));
         }
 
         bool range_query(u64 low, u64 high, u64 p = 0, u64 l = 1)
         {
-            const u64 pow = (1lu << (levels - l + 1));
-            // std::cout << "range"
-            //           << " low:" << low
-            //           << " high:" << high
-            //           << " p:" << p
-            //           << " l:" << l
-            //           //   << " pow:" << pow
-            //           << std::endl;
+            const u64 pow_1 = (l == 1) ? UINT64_MAX : ((1lu << (levels - l + 1)) - 1);
+            const u64 pow_r_1 = 1lu << (levels - l);
 
-            // std::cout << "(p > high) || ((p + (pow - 1)) < low) " << ((p > high) || ((p + (pow - 1)) < low)) << std::endl;
-            // std::cout << "(p >= low) && ((p + (pow - 1)) <= high) " << ((p >= low) && ((p + (pow - 1)) <= high)) << std::endl;
-
-            if ((p > high) || ((p + (pow - 1)) < low))
+            if ((p > high) || ((p + pow_1) < low))
             {
                 // p is not contained in the range
                 return false;
             }
 
-            if ((p >= low) && ((p + (pow - 1)) <= high))
+            if ((p >= low) && ((p + pow_1) <= high))
             {
                 // p is contained in the range
                 return doubt(p, l);
@@ -116,7 +105,7 @@ namespace elastic_rose
                 return true;
             }
 
-            return range_query(low, high, p + (pow >> 1), l + 1);
+            return range_query(low, high, p + pow_r_1, l + 1);
         }
 
         bool range_query(std::string low, std::string high)
@@ -166,29 +155,15 @@ namespace elastic_rose
 
         bool doubt(u64 p, u64 l)
         {
-            if (l == 1)
-            {
-                return true;
-            }
-            if (l > levels + 1)
-            {
-                return true;
-            }
-
             if (!bf_test(bfs[l - 2], hash(p)))
-            {
                 return false;
-            }
 
             if (l > levels)
-            {
                 return true;
-            }
 
             if (doubt(p, l + 1))
-            {
                 return true;
-            }
+
             return doubt(p + (1 << (levels - l)), l + 1);
         }
 
@@ -226,7 +201,8 @@ namespace elastic_rose
             std::string ret = "";
             for (auto c : str)
                 for (int i = 7; i >= 0; --i)
-                    ret = (((c >> i) & 1) ? '1' : '0') + ret;
+                    ret += (((c >> i) & 1) ? '1' : '0');
+
             return ret;
         }
     };
