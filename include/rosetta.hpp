@@ -62,8 +62,8 @@ namespace elastic_rose
         bool range_query(std::string low, std::string high, std::string p, u64 l);
 
         u64 serializedSize() const;
-        char* serialize();
-        static Rosetta *deSerialize(char *&src);
+        char *serialize();
+        static Rosetta *deSerialize(char *src);
 
     private:
         std::vector<struct bf *> bfs;
@@ -221,11 +221,11 @@ namespace elastic_rose
         sizeAlign(size);
         return size;
     }
-    char* Rosetta::serialize()
+    char *Rosetta::serialize()
     {
         u64 size = serializedSize();
-        char* data = new char[size];
-        char* cur_data = data;
+        char *data = new char[size];
+        char *cur_data = data;
 
         memcpy(cur_data, &levels_, sizeof(levels_));
         cur_data += sizeof(levels_);
@@ -236,7 +236,7 @@ namespace elastic_rose
         assert(cur_data - data == (int64_t)size);
         return data;
     }
-    Rosetta *Rosetta::deSerialize(char *&src)
+    Rosetta *Rosetta::deSerialize(char *src)
     {
         u32 levels;
         memcpy(&levels, src, sizeof(levels));
