@@ -68,11 +68,9 @@ int main(int argc, char **argv)
     u64_test(rose);
 
     // serialize
-    u64 rose_size = rose.serializedSize();
-    char *dst = (char *)malloc(rose_size);
-    rose.serialize(dst);
+    // u64 rose_size = rose.serializedSize();
+    char *dst = rose.serialize();
 
-    dst -= rose_size;
     std::cout << "=========after=========" << std::endl;
     Rosetta *new_rose = Rosetta::deSerialize(dst);
     u64_test(*new_rose);
@@ -85,11 +83,9 @@ int main(int argc, char **argv)
     string_test(rose2);
 
     // serialize
-    u64 rose2_size = rose2.serializedSize();
-    char *dst2 = (char *)malloc(rose2_size);
-    rose2.serialize(dst2);
+    // u64 rose2_size = rose2.serializedSize();
+    char *dst2 = rose2.serialize();
 
-    dst2 -= rose2_size;
     std::cout << "=========after=========" << std::endl;
     Rosetta *new_rose2 = Rosetta::deSerialize(dst2);
     string_test(*new_rose2);

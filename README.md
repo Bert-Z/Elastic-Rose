@@ -7,8 +7,10 @@ Unofficial implementation of Rosetta range filter, published in [SIGMOD2020](htt
 `rose_test.c` provides a simple demo on how to use the filter.
 
 ```
-make
-./rose_test.out
+mkdir build
+cd build
+cmake ..
+make -j8
 ```
 
 ## Benchmark and Optimizations
