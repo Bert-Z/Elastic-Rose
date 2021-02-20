@@ -11,29 +11,31 @@ int main()
 {
 
     std::vector<uint64_t> keys = {2, 3, 13, 19, 37, 123, 202};
-    struct bf *bf = bf_create(10, keys.size());
+    BF bf(10, keys.size());
 
     // add keys
     for (auto key : keys)
-        bf_add(bf, u64hash(key));
+        bf.add(u64hash(key));
 
     cout << "=========before=========" << endl;
     for (auto key : keys)
-        cout << bf_test(bf, u64hash(key)) << ' ';
+        cout << bf.test(u64hash(key)) << ' ';
     cout << endl;
 
-    u64 bf_size = bf_serialized_size(bf);
+    u64 bf_size = bf.serializedSize();
     char *dst = (char *)malloc(bf_size);
-    bf_serialize(bf, dst);
+    bf.serialize(dst);
 
     // dst has changed
     dst -= bf_size;
 
     cout << "=========after=========" << endl;
-    struct bf *new_bf = bf_deserialize(dst);
+    BF *new_bf = bf.deserialize(dst);
     for (auto key : keys)
-        cout << bf_test(new_bf, u64hash(key)) << ' ';
+        cout << new_bf->test(u64hash(key)) << ' ';
     cout << endl;
+
+    delete new_bf;
 
     return 0;
 }

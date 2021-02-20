@@ -74,6 +74,7 @@ int main(int argc, char **argv)
     std::cout << "=========after=========" << std::endl;
     Rosetta *new_rose = Rosetta::deSerialize(dst);
     u64_test(*new_rose);
+    delete (new_rose);
 
     std::cout << "=========string=========" << std::endl;
 
@@ -89,6 +90,7 @@ int main(int argc, char **argv)
     std::cout << "=========after=========" << std::endl;
     Rosetta *new_rose2 = Rosetta::deSerialize(dst2);
     string_test(*new_rose2);
+    delete (new_rose2);
 
     // std::vector<uint64_t> keys = {6989586621679009792, 7017452644373364736, 7061644215716937728};
     // Rosetta rose = Rosetta(keys, keys.size());

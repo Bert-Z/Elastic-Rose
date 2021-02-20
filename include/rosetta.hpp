@@ -14,14 +14,10 @@ namespace elastic_rose
         Rosetta(){};
         Rosetta(std::vector<u64> keys, u32 num) : levels_(64)
         {
-            bfs = std::vector<struct bf *>(levels_);
+            bfs = std::vector<BF *>(levels_);
             // malloc
             for (u32 i = 0; i < levels_; ++i)
-            {
-                struct bf *bf = bf_create(10, num);
-                assert(bf);
-                bfs[i] = bf;
-            }
+                bfs[i] = new BF(10, num);
 
             // insert keys
             for (auto key : keys)
@@ -31,14 +27,10 @@ namespace elastic_rose
         Rosetta(std::vector<std::string> keys, u32 num, u32 levels)
         {
             levels_ = levels;
-            bfs = std::vector<struct bf *>(levels_);
+            bfs = std::vector<BF *>(levels_);
             // malloc
             for (u32 i = 0; i < levels_; ++i)
-            {
-                struct bf *bf = bf_create(10, num);
-                assert(bf);
-                bfs[i] = bf;
-            }
+                bfs[i] = new BF(10, num);
 
             // insert keys
             for (auto key : keys)
@@ -48,7 +40,7 @@ namespace elastic_rose
         ~Rosetta()
         {
             for (auto bf : bfs)
-                bf_destroy(bf);
+                delete bf;
         }
 
         void insertKey(u64 key);
@@ -66,7 +58,7 @@ namespace elastic_rose
         static Rosetta *deSerialize(char *src);
 
     private:
-        std::vector<struct bf *> bfs;
+        std::vector<BF *> bfs;
         u32 levels_;
 
         bool doubt(u64 p, u64 l);
@@ -94,26 +86,26 @@ namespace elastic_rose
         {
             u64 mask = ~((1ul << (levels_ - i - 1)) - 1);
             u64 ik = key & mask;
-            bf_add(bfs[i], u64hash(ik));
+            bfs[i]->add(u64hash(ik));
         }
     }
     void Rosetta::insertKey(std::string key)
     {
         key = str2BitArray(key);
         for (u32 i = 0; i < levels_; ++i)
-            bf_add(bfs[i], BloomHash(key.substr(0, i + 1)));
+            bfs[i]->add(BloomHash(key.substr(0, i + 1)));
     }
 
     bool Rosetta::lookupKey(u64 key)
     {
-        return bf_test(bfs[levels_ - 1], u64hash(key));
+        return bfs[levels_ - 1]->test(u64hash(key));
     }
 
     bool Rosetta::lookupKey(std::string key)
     {
         // std::cout << str2BitArray(key) << std::endl;
         key = str2BitArray(key);
-        return bf_test(bfs[levels_ - 1], BloomHash(key));
+        return bfs[levels_ - 1]->test(BloomHash(key));
     }
 
     bool Rosetta::range_query(u64 low, u64 high, u64 p, u64 l)
@@ -179,7 +171,7 @@ namespace elastic_rose
     bool Rosetta::doubt(u64 p, u64 l)
     {
         // std::cout << "doubt:" << p << ' ' << l << std::endl;
-        if (!bf_test(bfs[l - 2], u64hash(p)))
+        if (!bfs[l - 2]->test(u64hash(p)))
             return false;
 
         if (l > levels_)
@@ -194,7 +186,7 @@ namespace elastic_rose
     bool Rosetta::doubt(std::string p, u64 l)
     {
         // std::cout << "doubt:" << p << ' ' << l << std::endl;
-        if (!bf_test(bfs[l - 2], BloomHash(p.substr(0, l - 1))))
+        if (!bfs[l - 2]->test(BloomHash(p.substr(0, l - 1))))
         {
             return false;
         }
@@ -217,7 +209,7 @@ namespace elastic_rose
         u64 size = sizeof(levels_);
         sizeAlign(size);
         for (auto bf : bfs)
-            size += bf_serialized_size(bf);
+            size += bf->serializedSize();
         sizeAlign(size);
         return size;
     }
@@ -231,7 +223,7 @@ namespace elastic_rose
         cur_data += sizeof(levels_);
         align(cur_data);
         for (u32 i = 0; i < levels_; ++i)
-            bf_serialize(bfs[i], cur_data);
+            bfs[i]->serialize(cur_data);
         align(cur_data);
         assert(cur_data - data == (int64_t)size);
         return data;
@@ -244,9 +236,9 @@ namespace elastic_rose
         align(src);
         Rosetta *rosetta = new Rosetta();
         rosetta->levels_ = levels;
-        rosetta->bfs = std::vector<struct bf *>(levels);
+        rosetta->bfs = std::vector<BF *>(levels);
         for (u32 i = 0; i < levels; ++i)
-            rosetta->bfs[i] = bf_deserialize(src);
+            rosetta->bfs[i] = BF::deserialize(src);
         align(src);
         return rosetta;
     }
