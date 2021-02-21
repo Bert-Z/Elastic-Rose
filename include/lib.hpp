@@ -12,6 +12,7 @@
 #include <string.h>
 #include <math.h>
 #include <vector>
+#include <iostream>
 
 #include "config.hpp"
 
@@ -142,11 +143,11 @@ namespace elastic_rose
       memcpy(&ones, src, sizeof(ones));
       src += sizeof(ones);
       u64 bm_size = bits_round_up(nbits, 6) >> 3;
-      src += bm_size;
-      align(src);
 
       bitmap bm(nbits, ones, vector<u64>((u64 *)src, (u64 *)src + (bm_size >> 3)));
       BF *new_bf = new BF(nr_probe, bm);
+      src += bm_size;
+      align(src);
 
       return new_bf;
     }

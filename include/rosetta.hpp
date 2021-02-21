@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <iostream>
+#include <bitset>
 #include "hash.hpp"
 
 namespace elastic_rose
@@ -51,7 +52,9 @@ namespace elastic_rose
 
         bool range_query(u64 low, u64 high, u64 p = 0, u64 l = 1);
         bool range_query(std::string low, std::string high);
-        bool range_query(std::string low, std::string high, std::string p, u64 l);
+        bool range_query(std::string low, std::string high, std::string p, u64 l, std::string& min_accept);
+
+        std::string seek(const std::string& key);
 
         u64 serializedSize() const;
         char *serialize();
@@ -62,19 +65,38 @@ namespace elastic_rose
         u32 levels_;
 
         bool doubt(u64 p, u64 l);
-        bool doubt(std::string p, u64 l);
+        bool doubt(std::string p, u64 l, std::string& min_accept);
 
         std::string str2BitArray(std::string str)
         {
             std::string ret = "";
             for (auto c : str)
-
                 for (int i = 7; i >= 0; --i)
                     ret += (((c >> i) & 1) ? '1' : '0');
 
             // format str size
             while (ret.size() < levels_)
                 ret += '0';
+
+            return ret;
+        }
+
+        std::string bitArray2Str(std::string str){
+            std::string ret="";
+            size_t size=str.size();
+            for(size_t i=0;i<size;i=i+8){
+                bitset<8> bit(str.substr(i,8));
+                int tmp=bit.to_ullong();
+                if(tmp!=0)
+                    ret+=static_cast<char>(tmp);
+            }
+            return ret;
+        }
+
+        std::string maxBitArray(){
+            std::string ret = "";
+            while (ret.size() < levels_)
+                ret += '1';
 
             return ret;
         }
@@ -137,10 +159,11 @@ namespace elastic_rose
     bool Rosetta::range_query(std::string low, std::string high)
     {
         std::string p(levels_, '0');
-        return range_query(str2BitArray(low), str2BitArray(high), p, 1);
+        std::string tmp;
+        return range_query(str2BitArray(low), str2BitArray(high), p, 1,tmp);
     }
 
-    bool Rosetta::range_query(std::string low, std::string high, std::string p, u64 l)
+    bool Rosetta::range_query(std::string low, std::string high, std::string p, u64 l, std::string& min_accept)
     {
         // std::cout << p << ' ' << l << std::endl;
         std::string pow_1;
@@ -156,16 +179,16 @@ namespace elastic_rose
 
         if ((p >= low) && (high >= upper_bound))
         {
-            return doubt(p, l);
+            return doubt(p, l,min_accept);
         }
 
-        if (range_query(low, high, p, l + 1))
+        if (range_query(low, high, p, l + 1,min_accept))
         {
             return true;
         }
 
         p[l - 1] = '1';
-        return range_query(low, high, p, l + 1);
+        return range_query(low, high, p, l + 1,min_accept);
     }
 
     bool Rosetta::doubt(u64 p, u64 l)
@@ -183,7 +206,7 @@ namespace elastic_rose
         return doubt(p + (1 << (levels_ - l)), l + 1);
     }
 
-    bool Rosetta::doubt(std::string p, u64 l)
+    bool Rosetta::doubt(std::string p, u64 l, std::string& min_accept)
     {
         // std::cout << "doubt:" << p << ' ' << l << std::endl;
         if (!bfs[l - 2]->test(BloomHash(p.substr(0, l - 1))))
@@ -191,17 +214,17 @@ namespace elastic_rose
             return false;
         }
 
-        if (l > levels_)
-        {
+        if (l > levels_){
+            min_accept= bitArray2Str(p);
             return true;
         }
 
-        if (doubt(p, l + 1))
+        if (doubt(p, l + 1,min_accept))
         {
             return true;
         }
         p[l - 1] = '1';
-        return doubt(p, l + 1);
+        return doubt(p, l + 1,min_accept);
     }
 
     u64 Rosetta::serializedSize() const
@@ -241,5 +264,12 @@ namespace elastic_rose
             rosetta->bfs[i] = BF::deserialize(src);
         align(src);
         return rosetta;
+    }
+
+    std::string Rosetta::seek(const std::string& key){
+        std::string p(levels_, '0');
+        std::string tmp;
+        
+        return range_query(str2BitArray(key), maxBitArray(), p, 1,tmp)?tmp:"";
     }
 } // namespace elastic_rose

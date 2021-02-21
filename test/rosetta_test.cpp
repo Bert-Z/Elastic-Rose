@@ -83,6 +83,8 @@ int main(int argc, char **argv)
     std::cout << "=========before=========" << std::endl;
     string_test(rose2);
 
+    std::cout <<"seek: "<< rose2.seek("e") << std::endl;
+
     // serialize
     // u64 rose2_size = rose2.serializedSize();
     char *dst2 = rose2.serialize();
@@ -90,6 +92,9 @@ int main(int argc, char **argv)
     std::cout << "=========after=========" << std::endl;
     Rosetta *new_rose2 = Rosetta::deSerialize(dst2);
     string_test(*new_rose2);
+
+    std::cout <<"seek: "<< rose2.seek("e") << std::endl;
+    std::cout <<"seek: "<< rose2.seek("b") << std::endl;
     delete (new_rose2);
 
     // std::vector<uint64_t> keys = {6989586621679009792, 7017452644373364736, 7061644215716937728};
