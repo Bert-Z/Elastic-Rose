@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 
     std::vector<uint64_t> keys = {2, 3, 13, 19, 23, 29, 31, 37, 123, 202};
     // u64 keys[] = {123};
-    Rosetta rose = Rosetta(keys, keys.size());
+    Rosetta rose = Rosetta(keys, keys.size(), 10);
 
     std::cout << "=========before=========" << std::endl;
     u64_test(rose);
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     std::cout << "=========string=========" << std::endl;
 
     std::vector<string> strkeys = {"a", "cat", "dog", "egg", "mark"};
-    Rosetta rose2 = Rosetta(strkeys, strkeys.size(), 128);
+    Rosetta rose2 = Rosetta(strkeys, strkeys.size(), 128, 10);
     std::cout << "=========before=========" << std::endl;
     string_test(rose2);
 
