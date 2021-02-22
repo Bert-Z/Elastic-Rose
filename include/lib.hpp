@@ -14,7 +14,7 @@
 #include <vector>
 #include <iostream>
 
-#include "config.hpp"
+#include "configuration.hpp"
 
 #if defined(__x86_64__)
 #include <x86intrin.h>
