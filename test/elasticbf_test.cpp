@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
-#include "../include/elastic_bf.hpp"
+#include "elastic_bf.hpp"
 
 using namespace std;
 using namespace elastic_rose;

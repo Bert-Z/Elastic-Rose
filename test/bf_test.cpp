@@ -1,8 +1,8 @@
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
-#include "../include/lib.hpp"
-#include "../include/hash.hpp"
+#include "lib.hpp"
+#include "hash.hpp"
 
 using namespace std;
 using namespace elastic_rose;

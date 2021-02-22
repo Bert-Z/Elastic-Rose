@@ -1,4 +1,4 @@
-#include "../include/rosetta.hpp"
+#include "rosetta.hpp"
 
 using namespace elastic_rose;
 using namespace std;

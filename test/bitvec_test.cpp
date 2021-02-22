@@ -1,4 +1,4 @@
-#include "../include/bitvec.hpp"
+#include "bitvec.hpp"
 #include <iostream>
 
 using namespace std;

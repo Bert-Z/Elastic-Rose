@@ -1,4 +1,4 @@
-#include "../include/hash.hpp"
+#include "hash.hpp"
 
 #include <iostream>
 
