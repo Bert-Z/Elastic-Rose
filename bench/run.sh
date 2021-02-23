@@ -1,22 +1,28 @@
-#!bin/bash
+#!/bin/bash
 
 echo 'Bloom Filter, random int, point queries'
-../build/bench/workload Bloom 1 mixed 50 0 randint point zipfian
+../build/bench/workload Bloom 1 mixed 10 0 randint point zipfian
+
+echo 'ElasticBF Filter, random int, point queries'
+../build/bench/workload ElasticBF 1 mixed 10 0 randint point zipfian
 
 echo 'Rosetta Filter, random int, point queries'
-../build/bench/workload Rosetta 1 mixed 50 0 randint point zipfian
+../build/bench/workload Rosetta 1 mixed 10 0 randint point zipfian
+
+echo 'ElasticRosetta Filter, random int, point queries'
+../build/bench/workload ElasticRosetta 1 mixed 10 0 randint point zipfian
 
 echo 'SuRF, random int, point queries'
-../build/bench/workload SuRF 1 mixed 50 0 randint point zipfian
+../build/bench/workload SuRF 1 mixed 10 0 randint point zipfian
 
 echo 'SuRFHash, 4-bit suffixes, random int, point queries'
-../build/bench/workload SuRFHash 4 mixed 50 0 randint point zipfian
+../build/bench/workload SuRFHash 4 mixed 10 0 randint point zipfian
 
 echo 'SuRFReal, 4-bit suffixes, random int, point queries'
-../build/bench/workload SuRFReal 4 mixed 50 0 randint point zipfian
+../build/bench/workload SuRFReal 4 mixed 10 0 randint point zipfian
 
 echo 'SuRFMixed, 2-bit hash suffixes and 2-bit real suffixes, random int, point queries'
-../build/bench/workload SuRFMixed 2 mixed 50 0 randint mix zipfian
+../build/bench/workload SuRFMixed 2 mixed 10 0 randint mix zipfian
 
 
 # echo 'Bloom Filter, email, point queries'

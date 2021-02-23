@@ -4,19 +4,17 @@
 #include <vector>
 
 #include "filter.hpp"
-#include "rosetta.hpp"
+#include "../include/new/rosetta.hpp"
 
 namespace bench
 {
-    using namespace elastic_rose;
-
     class FilterRosetta : public Filter
     {
     public:
         // Requires that keys are sorted
-        FilterRosetta(std::vector<std::string> keys, u32 num, u32 levels, u64 bits_per_key)
+        FilterRosetta(std::vector<std::string> &keys, uint32_t num, uint32_t levels, uint64_t bits_per_key)
         {
-            filter_ = new Rosetta(keys, num, levels, bits_per_key);
+            filter_ = new elastic_rose::Rosetta(keys, num, levels, bits_per_key);
         }
 
         ~FilterRosetta()
@@ -44,7 +42,7 @@ namespace bench
         // }
 
     private:
-        Rosetta *filter_;
+        elastic_rose::Rosetta *filter_;
     };
 
 } // namespace bench

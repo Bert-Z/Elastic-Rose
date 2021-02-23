@@ -4,34 +4,34 @@
 #include <vector>
 
 #include "filter.hpp"
-#include "../include/new/elastic_rosetta.hpp"
+#include "../include/new/elastic_bf.hpp"
 
 namespace bench
 {
     using namespace elastic_rose;
 
-    class FilterElasticRosetta : public Filter
+    class FilterElasticBF : public Filter
     {
     public:
         // Requires that keys are sorted
-        FilterElasticRosetta(std::vector<std::string> keys, u32 levels, u64 bits_per_key, std::vector<u64> last_level_bits_per_keys)
+        FilterElasticBF(std::vector<std::string> &keys, std::vector<u64> bits_per_keys)
         {
-            filter_ = new elastic_rose::Elastic_Rosetta(keys, levels, bits_per_key, last_level_bits_per_keys);
+            filter_ = new elastic_rose::Elastic_BF(keys, bits_per_keys);
         }
 
-        ~FilterElasticRosetta()
+        ~FilterElasticBF()
         {
             delete filter_;
         }
 
         bool lookup(const std::string &key)
         {
-            return filter_->lookupKey(key);
+            return filter_->test(key);
         }
 
         bool lookupRange(const std::string &left_key, const std::string &right_key)
         {
-            return filter_->range_query(left_key, right_key);
+            return false;
         }
 
         // bool approxCount(const std::string& left_key, const std::string& right_key) {
@@ -44,7 +44,7 @@ namespace bench
         // }
 
     private:
-        elastic_rose::Elastic_Rosetta *filter_;
+        elastic_rose::Elastic_BF *filter_;
     };
 
 } // namespace bench

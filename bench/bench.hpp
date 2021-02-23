@@ -88,6 +88,28 @@ void loadKeysFromFile(const std::string& file_name, uint64_t num_records,
     max_size=64;
 }
 
+std::string str2BitArray(const std::string &str, std::string& key_type, uint32_t levels)
+{
+    std::string ret = "";
+    for (auto c : str)
+        for (int i = 7; i >= 0; --i)
+            ret += (((c >> i) & 1) ? '1' : '0');
+
+    // format str size
+    if(key_type.compare(std::string("email")) == 0)
+        ret += std::string(levels-ret.size(),'0');
+    else
+        ret = std::string(levels-ret.size(),'0') + ret;
+
+    return ret;
+}
+
+void preTreatment(std::vector<std::string> &insert_keys, std::string& key_type, uint32_t level){
+    uint32_t sz=insert_keys.size();
+    for(uint32_t i=0;i<sz;++i)
+        insert_keys[i]=str2BitArray(insert_keys[i],key_type,level);
+}
+
 // 0 < percent <= 100
 void selectKeysToInsert(const unsigned percent, 
 			std::vector<std::string> &insert_keys, 

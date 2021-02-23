@@ -12,7 +12,7 @@ class FilterBloom : public Filter {
 public:
     // Requires that keys are sorted
     FilterBloom(const std::vector<std::string>& keys) {
-	filter_ = new BloomFilter(kBitsPerKey);
+	filter_ = new bloom::BloomFilter(kBitsPerKey);
 	filter_->CreateFilter(keys, keys.size(), &filter_data_);
     }
 
@@ -41,7 +41,7 @@ public:
 private:
     int kBitsPerKey = 10;
 
-    BloomFilter* filter_;
+    bloom::BloomFilter* filter_;
     std::string filter_data_;
 };
 

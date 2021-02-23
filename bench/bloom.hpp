@@ -17,6 +17,9 @@
 
 using namespace std;
 
+namespace bloom
+{
+	
 inline uint32_t DecodeFixed32(const char* ptr) {
     uint32_t result;
     memcpy(&result, ptr, sizeof(result));  // gcc optimizes this to a plain load
@@ -195,6 +198,9 @@ class BloomFilter {
 	return true;
     }
 };
+
+} // namespace bloom
+
 
 
 #endif  // LEVELDB_BLOOM_H_

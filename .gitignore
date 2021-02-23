@@ -3,5 +3,6 @@
 *.out
 build
 
+bench/result
 bench/workloads
 bench/workload_gen/YCSB

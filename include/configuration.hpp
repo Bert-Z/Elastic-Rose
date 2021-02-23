@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <time.h>
+#include <sys/time.h>
 
 namespace elastic_rose
 {
@@ -24,5 +26,13 @@ namespace elastic_rose
     void sizeAlign(u64 &size)
     {
         size = (size + 7) & ~((u64)7);
+    }
+
+    // for time measurement
+    double getNow()
+    {
+        struct timeval tv;
+        gettimeofday(&tv, 0);
+        return tv.tv_sec + tv.tv_usec / 1000000.0;
     }
 } // namespace elastic_rose
