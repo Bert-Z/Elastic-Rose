@@ -1,6 +1,6 @@
-# Rosetta
+# ElasticRosetta
 
-Unofficial implementation of Rosetta range filter, published in [SIGMOD2020](https://stratos.seas.harvard.edu/files/stratos/files/rosetta.pdf).
+Based on unofficial implementation of Rosetta range filter, published in [SIGMOD2020](https://stratos.seas.harvard.edu/files/stratos/files/rosetta.pdf).
 
 ## Build
 
