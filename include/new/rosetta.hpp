@@ -50,8 +50,8 @@ namespace elastic_rose
 
         bool lookupKey(const std::string &key);
 
-        bool range_query(std::string low, std::string high);
-        bool range_query(std::string low, std::string high, std::string p, u64 l, std::string &min_accept);
+        bool range_query(const std::string &low, const std::string &high);
+        bool range_query(const std::string &low, const std::string &high, std::string &p, u64 l, std::string &min_accept);
 
         std::string seek(const std::string &key);
 
@@ -63,7 +63,7 @@ namespace elastic_rose
         std::vector<BloomFilter *> bfs;
         u32 levels_;
 
-        bool doubt(std::string p, u64 l, std::string &min_accept);
+        bool doubt(std::string &p, u64 l, std::string &min_accept);
 
         std::string str2BitArray(const std::string &str)
         {
@@ -110,7 +110,7 @@ namespace elastic_rose
         return bfs[levels_ - 1]->test(key);
     }
 
-    bool Rosetta::range_query(std::string low, std::string high)
+    bool Rosetta::range_query(const std::string &low, const std::string &high)
     {
         std::string p(levels_, '0');
         std::string tmp;
@@ -118,7 +118,7 @@ namespace elastic_rose
         return range_query(low, high, p, 1, tmp);
     }
 
-    bool Rosetta::range_query(std::string low, std::string high, std::string p, u64 l, std::string &min_accept)
+    bool Rosetta::range_query(const std::string &low, const std::string &high, std::string &p, u64 l, std::string &min_accept)
     {
         // std::cout << p << ' ' << l << std::endl;
         std::string pow_1;
@@ -146,7 +146,7 @@ namespace elastic_rose
         return range_query(low, high, p, l + 1, min_accept);
     }
 
-    bool Rosetta::doubt(std::string p, u64 l, std::string &min_accept)
+    bool Rosetta::doubt(std::string &p, u64 l, std::string &min_accept)
     {
         // std::cout << "doubt:" << p << ' ' << l << std::endl;
         if (!bfs[l - 2]->test(p.substr(0, l - 1)))

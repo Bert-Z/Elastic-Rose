@@ -119,7 +119,8 @@ namespace elastic_rose
     {
         std::string p(levels_, '0');
         std::string tmp;
-        return range_query(str2BitArray(low), str2BitArray(high), p, 1, tmp);
+        // return range_query(str2BitArray(low), str2BitArray(high), p, 1, tmp);
+        return range_query(low, high, p, 1, tmp);
     }
 
     bool Elastic_Rosetta::range_query(std::string low, std::string high, std::string p, u64 l, std::string &min_accept)
