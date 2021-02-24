@@ -35,7 +35,7 @@ You must provide your own email list to generate email-key workloads.
 
 ```
 cd bench
-bash run.sh
+./run.sh
 ```
 
 Note that `run.sh` only includes several representative runs. Refer to `bench/workload.cpp`, `bench/workload_multi_thread.cpp` and `bench/workload_arf.cpp` for more experiment configurations.

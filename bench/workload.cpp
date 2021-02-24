@@ -100,12 +100,15 @@ int main(int argc, char *argv[])
 	std::vector<std::string> insert_keys;
 	bench::selectKeysToInsert(percent, insert_keys, load_keys);
 
-	double pre_time1 = bench::getNow();
-	bench::preTreatment(insert_keys, key_type, level);
-	bench::preTreatment(txn_keys, key_type, level);
-	double pre_time2 = bench::getNow();
+	if (filter_type.compare(std::string("ElasticRosetta")) == 0 || filter_type.compare(std::string("Rosetta")) == 0)
+	{
+		double pre_time1 = bench::getNow();
+		bench::preTreatment(insert_keys, key_type, level);
+		bench::preTreatment(txn_keys, key_type, level);
+		double pre_time2 = bench::getNow();
 
-	std::cout << "preTreatment time = " << (pre_time2 - pre_time1) << std::endl;
+		std::cout << "preTreatment time = " << (pre_time2 - pre_time1) << std::endl;
+	}
 
 	if (workload_type.compare(std::string("alterByte")) == 0)
 		bench::modifyKeyByte(txn_keys, byte_pos);
