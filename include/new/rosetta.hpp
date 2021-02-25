@@ -54,6 +54,7 @@ namespace elastic_rose
         bool range_query(const std::string &low, const std::string &high, std::string &p, u64 l, std::string &min_accept);
 
         std::string seek(const std::string &key);
+        u32 getLevels() const { return levels_; }
 
         u64 serializedSize() const;
         char *serialize();
