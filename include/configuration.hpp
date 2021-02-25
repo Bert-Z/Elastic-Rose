@@ -11,8 +11,6 @@ namespace elastic_rose
     using u32 = unsigned int;
     using u64 = unsigned long;
 
-    static const size_t bits_per_key = 10;
-
     void align(char *&ptr)
     {
         ptr = (char *)(((uint64_t)ptr + 7) & ~((uint64_t)7));

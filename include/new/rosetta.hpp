@@ -18,28 +18,28 @@ namespace elastic_rose
         Rosetta(const std::vector<std::string> &keys, u32 num, u32 levels, u64 bits_per_key)
         {
             levels_ = levels;
-            std::cout << "levels:" << levels_ << std::endl;
+            // std::cout << "levels:" << levels_ << std::endl;
             bfs = std::vector<BloomFilter *>(levels_);
 
             std::vector<std::string> key_vec = keys;
 
-            double pre_time1, pre_time2, pre_time = 0, build_time = 0;
+            // double pre_time1, pre_time2, pre_time = 0, build_time = 0;
             for (int i = levels - 1; i >= 0; --i)
             {
-                pre_time1 = getNow();
+                // pre_time1 = getNow();
                 for (u32 j = 0; j < num; ++j)
                     key_vec[j] = key_vec[j].substr(0, i + 1);
-                pre_time2 = getNow();
-                pre_time += pre_time2 - pre_time1;
+                // pre_time2 = getNow();
+                // pre_time += pre_time2 - pre_time1;
 
-                pre_time1 = getNow();
+                // pre_time1 = getNow();
                 bfs[i] = new BloomFilter(key_vec, bits_per_key);
-                pre_time2 = getNow();
-                build_time += pre_time2 - pre_time1;
+                // pre_time2 = getNow();
+                // build_time += pre_time2 - pre_time1;
             }
 
-            std::cout << "pre_time:" << pre_time << std::endl;
-            std::cout << "bloom_build_time:" << build_time << std::endl;
+            // std::cout << "pre_time:" << pre_time << std::endl;
+            // std::cout << "bloom_build_time:" << build_time << std::endl;
         }
 
         ~Rosetta()
@@ -201,7 +201,7 @@ namespace elastic_rose
         align(src);
         Rosetta *rosetta = new Rosetta();
         rosetta->levels_ = levels;
-        std::cout << rosetta->levels_ << std::endl;
+        // std::cout << rosetta->levels_ << std::endl;
         rosetta->bfs = std::vector<BloomFilter *>(levels);
         for (u32 i = 0; i < levels; ++i)
             rosetta->bfs[i] = BloomFilter::deserialize(src);
