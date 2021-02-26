@@ -42,17 +42,36 @@ namespace elastic_rose
             // std::cout << "bloom_build_time:" << build_time << std::endl;
         }
 
+        Rosetta(const std::vector<u64> &keys, u32 num, u64 bits_per_key) : levels_(64)
+        {
+            bfs = std::vector<BloomFilter *>(levels_);
+
+            std::vector<u64> key_vec = keys;
+
+            for (int i = levels_ - 1; i >= 0; --i)
+            {
+                u64 mask = ~((1ul << (levels_ - i - 1)) - 1);
+                for (u32 j = 0; j < num; ++j)
+                    key_vec[j] = key_vec[j] & mask;
+                bfs[i] = new BloomFilter(key_vec, bits_per_key);
+            }
+        }
+
         ~Rosetta()
         {
             for (auto bf : bfs)
                 delete bf;
         }
 
+        bool lookupKey(const u64 &key);
         bool lookupKey(const std::string &key);
 
+        bool range_query(u64 low, u64 high);
+        bool range_query(u64 low, u64 high, u64 &min_accept, u64 p = 0, u64 l = 1);
         bool range_query(const std::string &low, const std::string &high);
         bool range_query(const std::string &low, const std::string &high, std::string &p, u64 l, std::string &min_accept);
 
+        u64 seek(const u64 &key);
         std::string seek(const std::string &key);
         u32 getLevels() const { return levels_; }
 
@@ -64,6 +83,7 @@ namespace elastic_rose
         std::vector<BloomFilter *> bfs;
         u32 levels_;
 
+        bool doubt(u64 p, u64 l, u64 &min_accept);
         bool doubt(std::string &p, u64 l, std::string &min_accept);
 
         std::string str2BitArray(const std::string &str)
@@ -104,6 +124,11 @@ namespace elastic_rose
         }
     };
 
+    bool Rosetta::lookupKey(const u64 &key)
+    {
+        return bfs[levels_ - 1]->test(key);
+    }
+
     bool Rosetta::lookupKey(const std::string &key)
     {
         // std::cout << str2BitArray(key) << std::endl;
@@ -117,6 +142,37 @@ namespace elastic_rose
         std::string tmp;
         // return range_query(str2BitArray(low), str2BitArray(high), p, 1, tmp);
         return range_query(low, high, p, 1, tmp);
+    }
+
+    bool Rosetta::range_query(u64 low, u64 high)
+    {
+        u64 tmp = 0;
+        return range_query(low, high, tmp, 0, 1);
+    }
+
+    bool Rosetta::range_query(u64 low, u64 high, u64 &min_accept, u64 p, u64 l)
+    {
+        const u64 pow_1 = (l == 1) ? UINT64_MAX : ((1lu << (levels_ - l + 1)) - 1);
+        const u64 pow_r_1 = 1lu << (levels_ - l);
+
+        if ((p > high) || ((p + pow_1) < low))
+        {
+            // p is not contained in the range
+            return false;
+        }
+
+        if ((p >= low) && ((p + pow_1) <= high))
+        {
+            // p is contained in the range
+            return doubt(p, l, min_accept);
+        }
+
+        if (range_query(low, high, min_accept, p, l + 1))
+        {
+            return true;
+        }
+
+        return range_query(low, high, min_accept, p + pow_r_1, l + 1);
     }
 
     bool Rosetta::range_query(const std::string &low, const std::string &high, std::string &p, u64 l, std::string &min_accept)
@@ -145,6 +201,24 @@ namespace elastic_rose
 
         p[l - 1] = '1';
         return range_query(low, high, p, l + 1, min_accept);
+    }
+
+    bool Rosetta::doubt(u64 p, u64 l, u64 &min_accept)
+    {
+        // std::cout << "doubt:" << p << ' ' << l << std::endl;
+        if (!bfs[l - 2]->test(p))
+            return false;
+
+        if (l > levels_)
+        {
+            min_accept = p;
+            return true;
+        }
+
+        if (doubt(p, l + 1, min_accept))
+            return true;
+
+        return doubt(p + (1 << (levels_ - l)), l + 1, min_accept);
     }
 
     bool Rosetta::doubt(std::string &p, u64 l, std::string &min_accept)
@@ -208,6 +282,12 @@ namespace elastic_rose
 
         align(src);
         return rosetta;
+    }
+
+    u64 Rosetta::seek(const u64 &key)
+    {
+        u64 tmp = 0;
+        return range_query(key, UINT64_MAX, tmp, 0, 1) ? tmp : 0;
     }
 
     std::string Rosetta::seek(const std::string &key)

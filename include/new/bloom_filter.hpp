@@ -245,6 +245,12 @@ namespace elastic_rose
             filter_->CreateFilter(keys, keys.size(), &filter_data_);
         }
 
+        BloomFilter(const std::vector<u64> &keys, const u64 bits_per_key, const u32 id = 0) : id_(id)
+        {
+            filter_ = new Bloom(bits_per_key, id);
+            filter_->CreateFilter(keys, keys.size(), &filter_data_);
+        }
+
         BloomFilter(const u32 filter_data_size, const std::string &filter_data, const u32 id = 0)
             : id_(id), filter_(new Bloom()), filter_data_size_(filter_data_size), filter_data_(filter_data) {}
 
@@ -254,6 +260,11 @@ namespace elastic_rose
         }
 
         bool test(const std::string &key)
+        {
+            return filter_->KeyMayMatch(key, filter_data_);
+        }
+
+        bool test(const u64 &key)
         {
             return filter_->KeyMayMatch(key, filter_data_);
         }
