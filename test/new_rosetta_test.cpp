@@ -54,8 +54,9 @@ void u64_test(Rosetta &rose)
     printf("%d %s\n", 13, rose.lookupKey(13) ? "exist" : "not exist");
     printf("%d %s\n", 202, rose.lookupKey(202) ? "exist" : "not exist");
     printf("%d %s\n", 203, rose.lookupKey(203) ? "exist" : "not exist");
+    printf("%ld %s\n", 2929836923455405461, rose.lookupKey(2929836923455405461) ? "exist" : "not exist");
 
-    printf("\n");
+    // printf("\n");
 
     // close range query
     test_rose(rose, 20, 30);
@@ -66,6 +67,7 @@ void u64_test(Rosetta &rose)
     test_rose(rose, 100, 130);
     test_rose(rose, 140, 201);
     test_rose(rose, 210, 220);
+    test_rose(rose, 2929836872643288022, 2929836964876985333);
 }
 
 void preTreatment(vector<string> &str_vec, u32 levels)
@@ -81,7 +83,8 @@ int main(int argc, char **argv)
 
     std::cout << "=========u64=========" << std::endl;
 
-    std::vector<uint64_t> keys = {2, 3, 13, 19, 23, 29, 31, 37, 123, 202};
+    std::vector<uint64_t> keys = {2, 3, 13, 19, 23, 29, 31, 37, 123, 202, 2929836923455405461};
+    // std::vector<uint64_t> keys = {2929836923455405461};
     Rosetta rose = Rosetta(keys, keys.size(), 10);
 
     std::cout << "=========before=========" << std::endl;

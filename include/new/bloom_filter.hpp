@@ -276,14 +276,14 @@ namespace elastic_rose
 
         u64 serializedSize() const
         {
-            u64 size = sizeof(filter_data_size_) + sizeof(id_) + (filter_data_.size() + 1) * sizeof(char);
+            u64 size = sizeof(filter_data_size_) + sizeof(id_) + (filter_data_.size()) * sizeof(char);
             sizeAlign(size);
             return size;
         }
 
         void serialize(char *&dst)
         {
-            filter_data_size_ = filter_data_.size() + 1;
+            filter_data_size_ = filter_data_.size();
             memcpy(dst, &filter_data_size_, sizeof(filter_data_size_));
             dst += sizeof(filter_data_size_);
             memcpy(dst, &id_, sizeof(id_));
@@ -303,10 +303,10 @@ namespace elastic_rose
 
             char *filter_data = new char[filter_data_size];
             memcpy(filter_data, src, filter_data_size * sizeof(char));
-            src += filter_data_size;
+            src += filter_data_size * sizeof(char);
             align(src);
 
-            std::string filter_data_str = std::string(filter_data);
+            std::string filter_data_str = std::string(filter_data, filter_data_size);
             BloomFilter *new_bf = new BloomFilter(filter_data_size, filter_data_str, id);
 
             return new_bf;

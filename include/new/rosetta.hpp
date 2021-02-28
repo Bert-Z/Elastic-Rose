@@ -154,6 +154,7 @@ namespace elastic_rose
     {
         const u64 pow_1 = (l == 1) ? UINT64_MAX : ((1lu << (levels_ - l + 1)) - 1);
         const u64 pow_r_1 = 1lu << (levels_ - l);
+        // std::cout << "range:" << p << ' ' << l << std::endl;
 
         if ((p > high) || ((p + pow_1) < low))
         {
@@ -218,7 +219,7 @@ namespace elastic_rose
         if (doubt(p, l + 1, min_accept))
             return true;
 
-        return doubt(p + (1 << (levels_ - l)), l + 1, min_accept);
+        return doubt(p + (1lu << (levels_ - l)), l + 1, min_accept);
     }
 
     bool Rosetta::doubt(std::string &p, u64 l, std::string &min_accept)

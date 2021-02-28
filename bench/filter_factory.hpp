@@ -36,6 +36,11 @@ namespace bench
 			return new FilterRosetta(keys, num, levels, bits_per_key);
 		}
 
+		static Filter *createFilter(std::vector<u64> &keys, uint32_t num, uint64_t bits_per_key)
+		{
+			return new FilterRosetta(keys, num, bits_per_key);
+		}
+
 		static Filter *createFilter(std::vector<std::string> &keys, u32 levels, u64 bits_per_key, std::vector<u64> last_level_bits_per_keys)
 		{
 			return new FilterElasticRosetta(keys, levels, bits_per_key, last_level_bits_per_keys);
