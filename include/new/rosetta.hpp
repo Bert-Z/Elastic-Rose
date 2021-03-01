@@ -5,6 +5,7 @@
 #include <iostream>
 #include <bitset>
 #include <assert.h>
+#include <math.h>
 
 #include "bloom_filter.hpp"
 
@@ -45,6 +46,12 @@ namespace elastic_rose
         Rosetta(const std::vector<u64> &keys, u32 num, u64 bits_per_key) : levels_(64)
         {
             bfs = std::vector<BloomFilter *>(levels_);
+            // key range
+            R_ = keys[num - 1] - keys[0];
+
+            std::vector<double> bpk_per_level_vec(levels_);
+            if (R_ != 0)
+                calBPK(bpk_per_level_vec, bits_per_key);
 
             std::vector<u64> key_vec = keys;
 
@@ -53,7 +60,7 @@ namespace elastic_rose
                 u64 mask = ~((1ul << (levels_ - i - 1)) - 1);
                 for (u32 j = 0; j < num; ++j)
                     key_vec[j] = key_vec[j] & mask;
-                bfs[i] = new BloomFilter(key_vec, bits_per_key);
+                bfs[i] = new BloomFilter(key_vec, (u64)bpk_per_level_vec[i]);
             }
         }
 
@@ -82,6 +89,8 @@ namespace elastic_rose
     private:
         std::vector<BloomFilter *> bfs;
         u32 levels_;
+
+        u64 R_;
 
         bool doubt(u64 p, u64 l, u64 &min_accept);
         bool doubt(std::string &p, u64 l, std::string &min_accept);
@@ -121,6 +130,48 @@ namespace elastic_rose
                 ret += '1';
 
             return ret;
+        }
+
+        double g(int x)
+        {
+            int logR = log(R_);
+            if (x < logR)
+                return 1;
+            else if (x == logR)
+                return (double)(R_ - (1 << x) + 1) / (double)(1 << x);
+            else
+                return 0;
+        }
+
+        double levelFrequency(int r)
+        {
+            int logR = log(R_);
+            double ret = 0;
+            for (int i = 0; i <= logR - r; ++i)
+                ret += g(r + i);
+            return ret;
+        }
+
+        void calBPK(std::vector<double> &bpk_per_level_vec, u64 bits_per_key)
+        {
+            double fre_min = 0;
+            bool isset = false;
+            for (u32 i = 0; i < levels_; ++i)
+            {
+                bpk_per_level_vec[i] = levelFrequency(levels_ - i - 1);
+                if (bpk_per_level_vec[i] != 0 && !isset)
+                {
+                    fre_min = bpk_per_level_vec[i];
+                    isset = true;
+                }
+            }
+            double fre_max = bpk_per_level_vec[levels_ - 1];
+
+            for (u32 i = 0; i < levels_; ++i)
+            {
+                if (bpk_per_level_vec[i] != 0)
+                    bpk_per_level_vec[i] = (bits_per_key / 2) * (2 - (fre_max - bpk_per_level_vec[i]) / (fre_max - fre_min));
+            }
         }
     };
 
