@@ -67,11 +67,11 @@ int main(int argc, char *argv[])
 
 	// create filter ==============================================
 	double time1 = bench::getNow();
-	bench::Filter *filter;
-	// if (filter_type.compare(std::string("Rosetta")) == 0)
-	filter = bench::FilterFactory::createFilter(insert_keys, insert_keys.size(), 10);
-	// else if (filter_type.compare(std::string("ElasticRosetta")) == 0)
-	// 	filter = bench::FilterFactory::createFilter(insert_keys, level, 10, {5, 5, 5, 5});
+	bench::Filter *filter = nullptr;
+	if (filter_type.compare(std::string("Rosetta")) == 0)
+		filter = bench::FilterFactory::createFilter(insert_keys, insert_keys.size(), 10);
+	else if (filter_type.compare(std::string("ElasticRosetta")) == 0)
+		filter = bench::FilterFactory::createFilter(insert_keys, 10, {5, 5, 5, 5});
 
 	double time2 = bench::getNow();
 	std::cout << "Build time = " << (time2 - time1) << std::endl;
@@ -152,7 +152,8 @@ int main(int argc, char *argv[])
 		fp_rate = false_positives / (true_negatives + false_positives + 0.0);
 	std::cout << bench::kGreen << "False Positive Rate = " << bench::kNoColor << fp_rate << "\n";
 
-	std::cout << bench::kGreen << "Memory = " << bench::kNoColor << filter->getMemoryUsage() << "\n\n";
+	if (filter != nullptr)
+		std::cout << bench::kGreen << "Memory = " << bench::kNoColor << filter->getMemoryUsage() << "\n\n";
 
 	return 0;
 }
