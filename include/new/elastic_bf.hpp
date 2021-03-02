@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-// #include "hash.hpp"
+#include <assert.h>
 #include "bloom_filter.hpp"
 
 using namespace std;
@@ -21,10 +21,21 @@ namespace elastic_rose
             for (u32 i = 0; i < size_; ++i)
                 bf_vec_.emplace_back(new BloomFilter(keys, bits_per_keys[i], i % 12));
         }
+
+        Elastic_BF(const std::vector<u64> &keys, vector<u64> bits_per_keys)
+        {
+            size_ = bits_per_keys.size();
+            serialized_size_ = 0;
+            open_size_ = size_;
+            for (u32 i = 0; i < size_; ++i)
+                bf_vec_.emplace_back(new BloomFilter(keys, bits_per_keys[i], i % 12));
+        }
+
         Elastic_BF() = default;
 
-        ~Elastic_BF(){
-            for(auto bf : bf_vec_)
+        ~Elastic_BF()
+        {
+            for (auto bf : bf_vec_)
                 delete bf;
         }
 
@@ -39,6 +50,7 @@ namespace elastic_rose
 
         void serialize(char *&dst)
         {
+            char *ns = dst;
             memcpy(dst, &size_, sizeof(size_));
             dst += sizeof(size_);
 
@@ -50,6 +62,7 @@ namespace elastic_rose
                 bf_vec_[i]->serialize(dst);
 
             align(dst);
+            assert(dst - ns == (int)serializedSize());
         }
 
         static Elastic_BF *deserialize(char *&src, u32 open_size)
@@ -82,8 +95,20 @@ namespace elastic_rose
             return true;
         }
 
+        bool test(const u64 &key)
+        {
+            for (u32 i = 0; i < open_size_; ++i)
+            {
+
+                if (!bf_vec_[i]->test(key))
+                    return false;
+            }
+
+            return true;
+        }
+
     public:
-        vector<BloomFilter*> bf_vec_;
+        vector<BloomFilter *> bf_vec_;
         u32 size_;
         u32 serialized_size_;
 

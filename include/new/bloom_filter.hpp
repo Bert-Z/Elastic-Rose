@@ -85,6 +85,7 @@ namespace elastic_rose
 
     public:
         Bloom() = default;
+        Bloom(size_t id) : id_(id){};
         Bloom(int bits_per_key, u32 id)
             : bits_per_key_(bits_per_key), id_(id)
         {
@@ -252,7 +253,7 @@ namespace elastic_rose
         }
 
         BloomFilter(const u32 filter_data_size, const std::string &filter_data, const u32 id = 0)
-            : id_(id), filter_(new Bloom()), filter_data_size_(filter_data_size), filter_data_(filter_data) {}
+            : id_(id), filter_(new Bloom(id)), filter_data_size_(filter_data_size), filter_data_(filter_data) {}
 
         ~BloomFilter()
         {

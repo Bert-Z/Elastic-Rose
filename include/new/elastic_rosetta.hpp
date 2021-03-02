@@ -6,6 +6,7 @@
 #include <iostream>
 #include <bitset>
 #include <assert.h>
+#include <math.h>
 #include "elastic_bf.hpp"
 
 namespace elastic_rose
@@ -33,6 +34,30 @@ namespace elastic_rose
             last_level_ebf_ = new Elastic_BF(keys, last_level_bits_per_keys);
         }
 
+        Elastic_Rosetta(const std::vector<u64> &keys, u64 bits_per_key, std::vector<u64> last_level_bits_per_keys) : levels_(64)
+        {
+            u32 num = keys.size();
+            bfs_ = std::vector<BloomFilter *>(levels_ - 1);
+
+            // key range
+            R_ = keys[num - 1] - keys[0];
+
+            std::vector<double> bpk_per_level_vec(levels_);
+            if (R_ != 0)
+                calBPK(bpk_per_level_vec, bits_per_key);
+
+            std::vector<u64> key_vec = keys;
+
+            for (int i = levels_ - 2; i >= 0; --i)
+            {
+                u64 mask = ~((1ul << (levels_ - i - 1)) - 1);
+                for (u32 j = 0; j < num; ++j)
+                    key_vec[j] = key_vec[j] & mask;
+                bfs_[i] = new BloomFilter(key_vec, (u64)bpk_per_level_vec[i]);
+            }
+            last_level_ebf_ = new Elastic_BF(keys, last_level_bits_per_keys);
+        }
+
         ~Elastic_Rosetta()
         {
             for (auto bf : bfs_)
@@ -48,14 +73,24 @@ namespace elastic_rose
                 return bfs_[level]->test(key);
         }
 
-        void insertKey(std::string key);
+        bool bfTest(u32 level, u64 key)
+        {
+            if (level == levels_ - 1)
+                return last_level_ebf_->test(key);
+            else
+                return bfs_[level]->test(key);
+        }
 
         bool lookupKey(const std::string &key);
+        bool lookupKey(const u64 &key);
 
+        bool range_query(u64 low, u64 high);
+        bool range_query(u64 low, u64 high, u64 &min_accept, u64 p = 0, u64 l = 1);
         bool range_query(std::string low, std::string high);
         bool range_query(std::string low, std::string high, std::string p, u64 l, std::string &min_accept);
 
         std::string seek(const std::string &key);
+        u64 seek(const u64 &key);
 
         u64 serializedSize() const;
         char *serialize();
@@ -66,7 +101,9 @@ namespace elastic_rose
         Elastic_BF *last_level_ebf_;
         u32 levels_;
 
-        bool doubt(u64 p, u64 l);
+        u64 R_;
+
+        bool doubt(u64 p, u64 l, u64 &min_accept);
         bool doubt(std::string p, u64 l, std::string &min_accept);
 
         std::string str2BitArray(std::string str)
@@ -105,6 +142,48 @@ namespace elastic_rose
 
             return ret;
         }
+
+        double g(int x)
+        {
+            int logR = log(R_);
+            if (x < logR)
+                return 1;
+            else if (x == logR)
+                return (double)(R_ - (1 << x) + 1) / (double)(1 << x);
+            else
+                return 0;
+        }
+
+        double levelFrequency(int r)
+        {
+            int logR = log(R_);
+            double ret = 0;
+            for (int i = 0; i <= logR - r; ++i)
+                ret += g(r + i);
+            return ret;
+        }
+
+        void calBPK(std::vector<double> &bpk_per_level_vec, u64 bits_per_key)
+        {
+            double fre_min = 0;
+            bool isset = false;
+            for (u32 i = 0; i < levels_; ++i)
+            {
+                bpk_per_level_vec[i] = levelFrequency(levels_ - i - 1);
+                if (bpk_per_level_vec[i] != 0 && !isset)
+                {
+                    fre_min = bpk_per_level_vec[i];
+                    isset = true;
+                }
+            }
+            double fre_max = bpk_per_level_vec[levels_ - 1];
+
+            for (u32 i = 0; i < levels_; ++i)
+            {
+                if (bpk_per_level_vec[i] != 0)
+                    bpk_per_level_vec[i] = (bits_per_key / 2) * (2 - (fre_max - bpk_per_level_vec[i]) / (fre_max - fre_min));
+            }
+        }
     };
 
     bool Elastic_Rosetta::lookupKey(const std::string &key)
@@ -115,12 +194,49 @@ namespace elastic_rose
         return bfTest(levels_ - 1, key);
     }
 
+    bool Elastic_Rosetta::lookupKey(const u64 &key)
+    {
+        return bfTest(levels_ - 1, key);
+    }
+
     bool Elastic_Rosetta::range_query(std::string low, std::string high)
     {
         std::string p(levels_, '0');
         std::string tmp;
         // return range_query(str2BitArray(low), str2BitArray(high), p, 1, tmp);
         return range_query(low, high, p, 1, tmp);
+    }
+
+    bool Elastic_Rosetta::range_query(u64 low, u64 high)
+    {
+        u64 tmp = 0;
+        return range_query(low, high, tmp, 0, 1);
+    }
+
+    bool Elastic_Rosetta::range_query(u64 low, u64 high, u64 &min_accept, u64 p, u64 l)
+    {
+        const u64 pow_1 = (l == 1) ? UINT64_MAX : ((1lu << (levels_ - l + 1)) - 1);
+        const u64 pow_r_1 = 1lu << (levels_ - l);
+        // std::cout << "range:" << p << ' ' << l << std::endl;
+
+        if ((p > high) || ((p + pow_1) < low))
+        {
+            // p is not contained in the range
+            return false;
+        }
+
+        if ((p >= low) && ((p + pow_1) <= high))
+        {
+            // p is contained in the range
+            return doubt(p, l, min_accept);
+        }
+
+        if (range_query(low, high, min_accept, p, l + 1))
+        {
+            return true;
+        }
+
+        return range_query(low, high, min_accept, p + pow_r_1, l + 1);
     }
 
     bool Elastic_Rosetta::range_query(std::string low, std::string high, std::string p, u64 l, std::string &min_accept)
@@ -149,6 +265,23 @@ namespace elastic_rose
 
         p[l - 1] = '1';
         return range_query(low, high, p, l + 1, min_accept);
+    }
+
+    bool Elastic_Rosetta::doubt(u64 p, u64 l, u64 &min_accept)
+    {
+        if (!bfTest(l - 2, p))
+            return false;
+
+        if (l > levels_)
+        {
+            min_accept = p;
+            return true;
+        }
+
+        if (doubt(p, l + 1, min_accept))
+            return true;
+
+        return doubt(p + (1lu << (levels_ - l)), l + 1, min_accept);
     }
 
     bool Elastic_Rosetta::doubt(std::string p, u64 l, std::string &min_accept)
@@ -218,6 +351,12 @@ namespace elastic_rose
         align(src);
 
         return elastic_rosetta;
+    }
+
+    u64 Elastic_Rosetta::seek(const u64 &key)
+    {
+        u64 tmp = 0;
+        return range_query(key, UINT64_MAX, tmp, 0, 1) ? tmp : 0;
     }
 
     std::string Elastic_Rosetta::seek(const std::string &key)
