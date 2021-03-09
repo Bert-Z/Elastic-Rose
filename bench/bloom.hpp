@@ -13,7 +13,7 @@
 #include <vector>
 #include <string>
 
-#include "MurmurHash3.h"
+#include "../include/new/MurmurHash3.h"
 
 using namespace std;
 
