@@ -11,23 +11,23 @@ namespace elastic_rose
     using u32 = unsigned int;
     using u64 = unsigned long;
 
-    void align(char *&ptr)
+    inline void align(char *&ptr)
     {
         ptr = (char *)(((uint64_t)ptr + 7) & ~((uint64_t)7));
     }
 
-    void sizeAlign(u32 &size)
+    inline void sizeAlign(u32 &size)
     {
         size = (size + 7) & ~((u32)7);
     }
 
-    void sizeAlign(u64 &size)
+    inline void sizeAlign(u64 &size)
     {
         size = (size + 7) & ~((u64)7);
     }
 
     // for time measurement
-    double getNow()
+    inline double getNow()
     {
         struct timeval tv;
         gettimeofday(&tv, 0);
